@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard | Vector Classes</title>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root { --blue: #38bdf8; --bg: #0f172a; --card: #1e293b; }
+        body { font-family: sans-serif; background: var(--bg); color: white; padding: 20px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; max-width: 800px; margin: auto; }
+        .tab-btn { flex: 1; padding: 12px; cursor: pointer; background: var(--card); border: 1px solid var(--blue); color: white; border-radius: 5px; font-weight: bold; }
+        .tab-btn.active { background: var(--blue); color: #0f172a; }
+        .section { display: none; max-width: 800px; margin: 20px auto; background: var(--card); padding: 25px; border-radius: 12px; }
+        .section.active { display: block; }
+        .item { background: #0f172a; padding: 15px; margin-top: 15px; border-radius: 8px; border-left: 5px solid var(--blue); position: relative; }
+        .del-btn { position: absolute; right: 15px; top: 15px; background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="tabs">
+    <button class="tab-btn active" onclick="openTab('videos', this)">Videos</button>
+    <button class="tab-btn" onclick="openTab('msgs', this)">Student Messages</button>
+</div>
+
+<div id="videos" class="section active">
+    <h3>Manage Videos</h3>
+    <input type="text" id="vTitle" placeholder="Title" style="width:100%; padding:10px; margin-bottom:10px;">
+    <input type="text" id="vUrl" placeholder="Embed URL" style="width:100%; padding:10px; margin-bottom:10px;">
+    <button onclick="addVideo()" style="width:100%; padding:10px; background:var(--blue); border:none; cursor:pointer; font-weight:bold;">Add Video</button>
+    <div id="videoList"></div>
+</div>
+
+<div id="msgs" class="section">
+    <h3>Incoming Messages</h3>
+    <div id="msgList">Loading messages...</div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBOqt5Pe6q_hiJbCTly7MQ_8ob4ICyMmx4",
+        authDomain: "vector-classes-6c2a7.firebaseapp.com",
+        projectId: "vector-classes-6c2a7",
+        storageBucket: "vector-classes-6c2a7.appspot.com",
+        messagingSenderId: "975898657895",
+        appId: "1:975898657895:web:52e4f64e50a45d434840c2"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function openTab(id, btn) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    // Load Messages
+    db.collection("contact_messages").orderBy("time", "desc").onSnapshot(snap => {
+        const list = document.getElementById('msgList');
+        list.innerHTML = snap.empty ? "No messages yet." : "";
+        snap.forEach(doc => {
+            const m = doc.data();
+            list.innerHTML += `<div class="item">
+                <button class="del-btn" onclick="deleteDoc('contact_messages','${doc.id}')">Delete</button>
+                <strong>${m.name}</strong> (${m.email})<br>
+                <small style="color:var(--blue)">${m.subject}</small><br>
+                <p style="margin-top:10px;">${m.message}</p>
+            </div>`;
+        });
+    });
+
+    async function deleteDoc(col, id) {
+        if(confirm("Confirm Delete?")) await db.collection(col).doc(id).delete();
+    }
+</script>
+</body>
+</html>
